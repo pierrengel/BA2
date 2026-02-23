@@ -51,18 +51,24 @@ st.markdown("""
         border: none !important;
         border-radius: 15px !important;
         
-        font-size: 22px !important; 
+        font-size: 26px !important; /* INCREASED FONT SIZE */
         text-align: left !important;
         white-space: pre-wrap !important;
         font-family: 'Helvetica', sans-serif !important;
         
         width: 100% !important;
-        min-height: 40vh !important; 
+        height: 320px !important;   /* FIXED HEIGHT FOR EQUAL SIZES */
         padding: 40px !important;
         margin-top: 20px !important;
         
         transition: all 0.2s ease-in-out !important;
         box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+    }
+
+    /* Ensure the paragraph text inside the button inherits the larger size */
+    div.stButton > button[kind="primary"] p {
+        font-size: 24px !important; 
+        line-height: 1.4 !important;
     }
 
     div.stButton > button[kind="primary"]:hover {
@@ -243,6 +249,10 @@ def home_page():
         # Box 5
         lbl_how = "WIE ES FUNKTIONIERT\n\nErfahren Sie, wie unser Algorithmus für Fairness sorgt." if lang == "DE" else "HOW IT WORKS\n\nUnderstand how our algorithm ensures fairness and transparency."
         if st.button(lbl_how, type="primary"): navigate_to('how_it_works')
+        
+        # Box 6
+        lbl_success = "ERFOLGSGESCHICHTEN\n\nLesen Sie, wie Nachbarn bereits positive Veränderungen bewirkt haben." if lang == "DE" else "SUCCESS STORIES\n\nRead how neighbors have already made a positive impact."
+        if st.button(lbl_success, type="primary"): navigate_to('success')
 
 
 def feed_page():
@@ -454,6 +464,42 @@ def how_it_works_page():
         st.subheader("🛡️ 3. Data Sovereignty")
         st.write("You own your data. In the *Privacy Control Center* on your dashboard, you can hit the red button at any time to completely erase your data from the system and the recommendation algorithm.")
 
+
+def success_page():
+    if st.button("🦇", type="secondary"): navigate_to('home')
+        
+    st.markdown("---")
+    st.markdown(f"<h1 style='text-align: center;'>{'ERFOLGSGESCHICHTEN' if lang == 'DE' else 'SUCCESS STORIES'}</h1>", unsafe_allow_html=True)
+    
+    if lang == "DE":
+        st.write("Hier sind einige Beispiele, wie Nachbarn ROBIN genutzt haben, um echte Verbesserungen in unserer Stadt zu bewirken:")
+        
+        with st.container(border=True):
+            st.subheader("🌳 Gemeinschaftsgarten gerettet")
+            st.write("Dank 150 Unterstützern auf der Plattform hat die Stadtregierung die Finanzierung für den Erhalt des Gartens in Sektor 3 gesichert.")
+            
+        with st.container(border=True):
+            st.subheader("🚸 Neuer Zebrastreifen an der Grundschule")
+            st.write("Eine von einer Vertretung (Proxy) eingereichte Idee führte zu einem sichereren Schulweg für über 200 Kinder.")
+            
+        with st.container(border=True):
+            st.subheader("💡 Mehr Beleuchtung im Nordpark")
+            st.write("Eine schnelle 60-Sekunden-Umfrage zeigte, dass sich Anwohner unwohl fühlten. Letzte Woche wurden 5 neue Laternen installiert.")
+    else:
+        st.write("Here are some examples of how neighbors have used ROBIN to make real improvements in our city:")
+        
+        with st.container(border=True):
+            st.subheader("🌳 Community Garden Saved")
+            st.write("Thanks to 150 supporters on the platform, the city government secured funding to maintain the garden in Sector 3.")
+            
+        with st.container(border=True):
+            st.subheader("🚸 New Crosswalk near the Elementary School")
+            st.write("An idea submitted by a proxy representative led to a safer school route for over 200 children.")
+            
+        with st.container(border=True):
+            st.subheader("💡 Better Lighting in the North Park")
+            st.write("A quick 60-second poll revealed residents felt unsafe. Last week, 5 new streetlights were successfully installed.")
+
 # ==========================================
 # 6. MAIN CONTROLLER
 # ==========================================
@@ -469,3 +515,5 @@ elif st.session_state.page == 'admin':
     admin_page()
 elif st.session_state.page == 'how_it_works':
     how_it_works_page()
+elif st.session_state.page == 'success':
+    success_page()
