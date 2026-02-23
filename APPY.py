@@ -157,10 +157,12 @@ st.markdown("""
         min-height: auto !important;
     }
 
-    /* Hide default menus */
+    /* FIX: Keep header transparent but visible so the sidebar toggle arrow works. 
+       Hide only the right-side toolbar menu. */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
+    header {background-color: transparent !important;}
+    [data-testid="stToolbar"] {visibility: hidden !important;}
     
     </style>
 """, unsafe_allow_html=True)
