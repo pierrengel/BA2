@@ -157,12 +157,25 @@ st.markdown("""
         min-height: auto !important;
     }
 
-    /* FIX: Keep header transparent but visible so the sidebar toggle arrow works. 
-       Hide only the right-side toolbar menu. */
+    /* =========================================
+       FIXED HEADER & SIDEBAR TOGGLE
+       ========================================= */
+    /* Make the header transparent so it blends with your dark background */
+    header {background-color: transparent !important;}
+    
+    /* Hide the top-right toolbar (Deploy button, default hamburger menu) */
+    [data-testid="stToolbar"] {visibility: hidden !important;}
+    
+    /* FORCE the top-left sidebar toggle arrow to be visible and colored mint */
+    [data-testid="collapsedControl"] {
+        visibility: visible !important;
+        display: block !important;
+        color: var(--text-mint) !important;
+    }
+
+    /* Hide the old menu and footer */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {background-color: transparent !important;}
-    [data-testid="stToolbar"] {visibility: hidden !important;}
     
     </style>
 """, unsafe_allow_html=True)
