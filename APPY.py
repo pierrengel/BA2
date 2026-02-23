@@ -14,13 +14,10 @@ if "wizard_step" not in st.session_state:
     st.session_state.wizard_step = 1
 if "lite_mode" not in st.session_state:
     st.session_state.lite_mode = False
+if "lang" not in st.session_state:
+    st.session_state.lang = "DE"
 if "supported_projects" not in st.session_state:
     st.session_state.supported_projects = []
-if "mock_ideas" not in st.session_state:
-    st.session_state.mock_ideas = [
-        {"id": 1, "title": "More benches in Nordpark", "desc": "Seniors need more places to rest when walking in the north park.", "sector": "Sector 4", "tag": "Infrastructure"},
-        {"id": 2, "title": "Fix streetlights on Elm St.", "desc": "It gets dangerously dark near the crosswalk after 5 PM.", "sector": "Sector 2", "tag": "Safety"}
-    ]
 
 def navigate_to(page_name):
     st.session_state.page = page_name
@@ -125,12 +122,10 @@ st.markdown("""
         margin-top: 20px !important;
     }
     
-    /* Force paragraph tags inside the button to be dark blue (stops mint inheritance) */
     div.stButton > button[kind="tertiary"] p {
         color: var(--text-dark) !important; 
     }
     
-    /* Hover state: Light Gray box, Dark Blue text */
     div.stButton > button[kind="tertiary"]:hover {
         background-color: #e0e0e0 !important; /* Light Gray */
     }
@@ -145,7 +140,7 @@ st.markdown("""
         font-family: 'Helvetica', sans-serif;
     }
     
-    /* Safely scoped Inputs to prevent weird stretching */
+    /* Safely scoped Inputs */
     .stTextInput > div > div > input, 
     .stTextArea > div > div > textarea,
     .stSelectbox > div > div > div,
@@ -160,8 +155,6 @@ st.markdown("""
     /* =========================================
        FIXED HEADER & SIDEBAR TOGGLE
        ========================================= */
-    /* Only hide the footer now. Let Streamlit render the header, sidebar arrow, 
-       and hamburger menu natively. Match header background to app background. */
     footer {visibility: hidden;}
     header {background-color: var(--app-bg) !important;}
     
@@ -169,26 +162,54 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. GLOBAL SIDEBAR (Hardware Access)
+# 3. GLOBAL UI ELEMENTS (Sidebar & Language)
 # ==========================================
+lang = st.session_state.lang
+
 with st.sidebar:
-    st.markdown("<h2 style='text-align: center;'>⚙️ Settings</h2>", unsafe_allow_html=True)
-    st.session_state.lite_mode = st.toggle("Lite Mode (Slow Internet)", value=st.session_state.lite_mode, help="Disables images and heavy media to save data.")
-    st.caption("Toggle this if your connection is unstable.")
+    st.markdown("<h2 style='text-align: center;'>⚙️ Settings</h2>" if lang == "EN" else "<h2 style='text-align: center;'>⚙️ Einstellungen</h2>", unsafe_allow_html=True)
+    
+    lbl_lite = "Lite Mode (Slow Internet)" if lang == "EN" else "Lite-Modus (Langsames Internet)"
+    lbl_lite_help = "Toggle this if your connection is unstable." if lang == "EN" else "Aktivieren Sie dies bei instabiler Verbindung."
+    
+    st.session_state.lite_mode = st.toggle(lbl_lite, value=st.session_state.lite_mode)
+    st.caption(lbl_lite_help)
+
+# Top Right Language Switcher
+col_empty, col_lang = st.columns([9, 1])
+with col_lang:
+    selected_lang = st.selectbox("Language", ["DE", "EN"], index=0 if lang == "DE" else 1, label_visibility="collapsed")
+    if selected_lang != st.session_state.lang:
+        st.session_state.lang = selected_lang
+        st.rerun()
+
+# Mock Ideas translated dynamically
+mock_ideas = [
+    {"id": 1, "title": "Mehr Bänke im Nordpark" if lang == "DE" else "More benches in Nordpark", 
+     "desc": "Senioren brauchen mehr Sitzgelegenheiten beim Spazierengehen im Nordpark." if lang == "DE" else "Seniors need more places to rest when walking in the north park.", 
+     "sector": "Sektor 4", "tag": "Infrastruktur" if lang == "DE" else "Infrastructure"},
+    {"id": 2, "title": "Straßenlaternen reparieren (Elm St.)" if lang == "DE" else "Fix streetlights on Elm St.", 
+     "desc": "Nach 17 Uhr wird es am Zebrastreifen gefährlich dunkel." if lang == "DE" else "It gets dangerously dark near the crosswalk after 5 PM.", 
+     "sector": "Sektor 2", "tag": "Sicherheit" if lang == "DE" else "Safety"}
+]
 
 # ==========================================
 # 4. DIALOGS (Modals)
 # ==========================================
-@st.dialog("Why do you support this?")
+dlg_title = "Warum unterstützen Sie das?" if lang == "DE" else "Why do you support this?"
+@st.dialog(dlg_title)
 def support_dialog(project_id, project_title):
-    st.markdown(f"**Idea:** {project_title}")
-    st.write("Help the community understand the consensus behind this idea.")
+    st.markdown(f"**{'Idee' if lang == 'DE' else 'Idea'}:** {project_title}")
+    st.write("Helfen Sie der Community zu verstehen, warum diese Idee wichtig ist." if lang == "DE" else "Help the community understand the consensus behind this idea.")
     
-    reason = st.radio("Select your primary reason:", ["Improves Safety", "Saves Money", "Builds Community", "Other"], label_visibility="collapsed")
+    opts = ["Erhöht die Sicherheit", "Spart Geld", "Fördert die Gemeinschaft", "Sonstiges"] if lang == "DE" else ["Improves Safety", "Saves Money", "Builds Community", "Other"]
+    reason = st.radio("Grund auswählen:" if lang == "DE" else "Select your primary reason:", opts, label_visibility="collapsed")
     
-    if st.button("Confirm Support", type="tertiary"):
+    btn_text = "Unterstützung bestätigen" if lang == "DE" else "Confirm Support"
+    if st.button(btn_text, type="tertiary"):
         st.session_state.supported_projects.append(project_id)
-        st.toast(f"Thank you! Your voice was added for '{reason}'.", icon="✅")
+        msg = f"Danke! Ihre Stimme für '{reason}' wurde gezählt." if lang == "DE" else f"Thank you! Your voice was added for '{reason}'."
+        st.toast(msg, icon="✅")
         time.sleep(1)
         st.rerun()
 
@@ -198,198 +219,240 @@ def support_dialog(project_id, project_title):
 
 def home_page():
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; font-size: 5rem; margin-bottom: 20px;'>ROBIN</h1>", unsafe_allow_html=True)
-    st.markdown("<h3 style='text-align: center; margin-bottom: 40px;'>Civic Inclusion Platform</h3>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; font-size: 5rem; margin-bottom: 40px;'>ROBIN</h1>", unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("COMMUNITY FEED\n\nSee what your neighbors are suggesting and vote on ideas.", type="primary"):
-            navigate_to('feed')
-        if st.button("MY DASHBOARD\n\nTrack your ideas, manage your identity, and meet neighbors.", type="primary"):
-            navigate_to('dashboard')
+        # Box 1
+        lbl_feed = "COMMUNITY-FEED\n\nSehen Sie, was Ihre Nachbarn vorschlagen, und stimmen Sie ab." if lang == "DE" else "COMMUNITY FEED\n\nSee what your neighbors are suggesting and vote on ideas."
+        if st.button(lbl_feed, type="primary"): navigate_to('feed')
             
+        # Box 2
+        lbl_dash = "MEIN DASHBOARD\n\nVerfolgen Sie Ihre Ideen, verwalten Sie Ihr Profil und treffen Sie Nachbarn." if lang == "DE" else "MY DASHBOARD\n\nTrack your ideas, manage your identity, and meet neighbors."
+        if st.button(lbl_dash, type="primary"): navigate_to('dashboard')
+            
+        # Box 3
+        lbl_admin = "STADTVERWALTUNG\n\n(Nur für Mitarbeiter) Schließen Sie die Feedback-Schleife für Projekte." if lang == "DE" else "CITY ADMIN\n\n(Staff Only) Close the feedback loop on local projects."
+        if st.button(lbl_admin, type="primary"): navigate_to('admin')
+
     with col2:
-        if st.button("SUBMIT AN IDEA\n\nTell the city about a problem or a new project idea.", type="primary"):
-            navigate_to('submit')
-        if st.button("CITY ADMIN\n\n(Staff Only) Close the feedback loop on local projects.", type="primary"):
-            navigate_to('admin')
+        # Box 4
+        lbl_submit = "IDEE EINREICHEN\n\nMelden Sie der Stadt ein Problem oder eine neue Projektidee." if lang == "DE" else "SUBMIT AN IDEA\n\nTell the city about a problem or a new project idea."
+        if st.button(lbl_submit, type="primary"): navigate_to('submit')
+            
+        # Box 5
+        lbl_how = "WIE ES FUNKTIONIERT\n\nErfahren Sie, wie unser Algorithmus für Fairness sorgt." if lang == "DE" else "HOW IT WORKS\n\nUnderstand how our algorithm ensures fairness and transparency."
+        if st.button(lbl_how, type="primary"): navigate_to('how_it_works')
 
 
 def feed_page():
-    if st.button("🦇", type="secondary"):
-        navigate_to('home')
+    if st.button("🦇", type="secondary"): navigate_to('home')
         
     st.markdown("---")
-    st.markdown("<h1 style='text-align: center; font-size: 3rem;'>COMMUNITY FEED</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h1 style='text-align: center; font-size: 3rem;'>{'COMMUNITY-FEED' if lang == 'DE' else 'COMMUNITY FEED'}</h1>", unsafe_allow_html=True)
     
-    st.info("📣 **Micro-Wins:** Tom shared his ladder with Anna. | The library got 50 new books! | Streetlight on 5th repaired.", icon="✨")
+    st.info("📣 **Mikro-Erfolge:** Tom hat seine Leiter mit Anna geteilt. | Die Bibliothek hat 50 neue Bücher! | Straßenlaterne repariert." if lang == "DE" else "📣 **Micro-Wins:** Tom shared his ladder with Anna. | The library got 50 new books! | Streetlight repaired.", icon="✨")
     
     col1, col2 = st.columns([2, 1])
     with col2:
         with st.container(border=True):
-            st.subheader("⏱️ Got 60 Seconds?")
-            st.write("Help shape your neighborhood:")
-            st.radio("Does the north park need more lighting?", ["Yes", "No", "Unsure"], key="poll_1")
-            if st.button("Vote Instantly", type="tertiary"):
-                st.toast("Vote recorded! You just shaped local policy.", icon="🎉")
+            st.subheader("⏱️ 60 Sekunden Zeit?" if lang == "DE" else "⏱️ Got 60 Seconds?")
+            st.write("Helfen Sie Ihrer Nachbarschaft:" if lang == "DE" else "Help shape your neighborhood:")
+            opts = ["Ja", "Nein", "Unsicher"] if lang == "DE" else ["Yes", "No", "Unsure"]
+            q = "Braucht der Nordpark mehr Beleuchtung?" if lang == "DE" else "Does the north park need more lighting?"
+            st.radio(q, opts, key="poll_1")
+            if st.button("Jetzt abstimmen" if lang == "DE" else "Vote Instantly", type="tertiary"):
+                st.toast("Abstimmung gespeichert!" if lang == "DE" else "Vote recorded!", icon="🎉")
 
     with col1:
-        sort_by = st.selectbox("Sort community ideas by:", ["Needs Your Voice", "Most Popular", "Recently Added"], index=0)
+        sort_opts = ["Braucht Ihre Stimme", "Beliebteste", "Kürzlich hinzugefügt"] if lang == "DE" else ["Needs Your Voice", "Most Popular", "Recently Added"]
+        st.selectbox("Ideen sortieren nach:" if lang == "DE" else "Sort community ideas by:", sort_opts, index=0)
         
-        for idea in st.session_state.mock_ideas:
+        for idea in mock_ideas:
             with st.container(border=True):
                 st.markdown(f"### {idea['title']}")
                 st.write(idea['desc'])
-                st.caption(f"✨ *Algorithm matched this because you follow [{idea['tag']}] and live in [{idea['sector']}].*")
+                st.caption(f"✨ *Algorithmus-Empfehlung, weil Sie [{idea['tag']}] folgen und in [{idea['sector']}] leben.*" if lang == "DE" else f"✨ *Algorithm matched this because you follow [{idea['tag']}] and live in [{idea['sector']}].*")
                 
                 if idea['id'] in st.session_state.supported_projects:
-                    st.button("✅ Supported", disabled=True, key=f"btn_disabled_{idea['id']}")
+                    st.button("✅ Unterstützt" if lang == "DE" else "✅ Supported", disabled=True, key=f"btn_disabled_{idea['id']}")
                 else:
-                    if st.button("🤝 Support this Idea", key=f"btn_support_{idea['id']}", type="tertiary"):
+                    if st.button("🤝 Idee unterstützen" if lang == "DE" else "🤝 Support this Idea", key=f"btn_support_{idea['id']}", type="tertiary"):
                         support_dialog(idea['id'], idea['title'])
 
 
 def submit_page():
-    if st.button("🦇", type="secondary"):
-        navigate_to('home')
+    if st.button("🦇", type="secondary"): navigate_to('home')
         
     st.markdown("---")
-    st.warning("📡 **You are currently offline.** Your typing is automatically saved to your device.", icon="⚠️")
+    st.warning("📡 **Sie sind offline.** Ihre Eingaben werden auf dem Gerät gespeichert." if lang == "DE" else "📡 **You are offline.** Your typing is automatically saved to your device.", icon="⚠️")
     
-    st.markdown("<h1 style='text-align: center;'>SUBMIT AN IDEA</h1>", unsafe_allow_html=True)
-    st.progress(st.session_state.wizard_step / 3.0, text=f"Step {st.session_state.wizard_step} of 3")
+    st.markdown(f"<h1 style='text-align: center;'>{'IDEE EINREICHEN' if lang == 'DE' else 'SUBMIT AN IDEA'}</h1>", unsafe_allow_html=True)
+    st.progress(st.session_state.wizard_step / 3.0, text=f"Schritt {st.session_state.wizard_step} von 3" if lang == "DE" else f"Step {st.session_state.wizard_step} of 3")
     st.markdown("<br>", unsafe_allow_html=True)
     
     _, center, _ = st.columns([1, 2, 1])
     
     with center:
         if st.session_state.wizard_step == 1:
-            st.subheader("1. What is the problem or idea?")
+            st.subheader("1. Was ist das Problem oder die Idee?" if lang == "DE" else "1. What is the problem or idea?")
             
-            # --- ASSISTED MODE INTEGRATION ---
-            assisted_mode = st.toggle("Assisted Mode (Step-by-step guidance)")
+            assisted_mode = st.toggle("Assistenz-Modus (Schritt-für-Schritt)" if lang == "DE" else "Assisted Mode (Step-by-step guidance)")
             st.markdown("<br>", unsafe_allow_html=True)
             
             if not assisted_mode:
-                st.text_area("Description", placeholder="E.g., The sidewalk on Main St. is broken...", label_visibility="collapsed")
-                st.write("**Or, record a voice message:**")
-                st.audio_input("Record your voice", label_visibility="collapsed")
+                p_text = "Z.B. Der Bürgersteig auf der Hauptstraße ist kaputt..." if lang == "DE" else "E.g., The sidewalk on Main St. is broken..."
+                st.text_area("Beschreibung", placeholder=p_text, label_visibility="collapsed")
+                st.write("**Oder sprechen Sie eine Nachricht ein:**" if lang == "DE" else "**Or, record a voice message:**")
+                st.audio_input("Sprachaufnahme" if lang == "DE" else "Record your voice", label_visibility="collapsed")
             else:
-                st.markdown("#### What kind of project is it?")
-                st.pills("Project Type", ["Quick fix", "Big idea", "Other"], label_visibility="collapsed", key="type_select")
+                st.markdown("#### Um welche Art von Projekt handelt es sich?" if lang == "DE" else "#### What kind of project is it?")
+                t_opts = ["Schnelle Lösung", "Große Idee", "Sonstiges"] if lang == "DE" else ["Quick fix", "Big idea", "Other"]
+                st.pills("Typ", t_opts, label_visibility="collapsed", key="type_select")
                 
-                st.markdown("#### What resources do you need?")
-                resources = ["Hammer", "Workspace", "Drill", "3D Printer", "Paint", "Wood", "Metal", "Soldering Iron", "Laptop"]
-                st.multiselect("Resources", resources, label_visibility="collapsed", key="resource_select")
+                st.markdown("#### Welche Ressourcen benötigen Sie?" if lang == "DE" else "#### What resources do you need?")
+                r_opts = ["Hammer", "Arbeitsplatz", "Bohrmaschine", "3D-Drucker", "Farbe", "Holz", "Metall", "Lötkolben", "Laptop"] if lang == "DE" else ["Hammer", "Workspace", "Drill", "3D Printer", "Paint", "Wood", "Metal", "Soldering Iron", "Laptop"]
+                st.multiselect("Ressourcen", r_opts, label_visibility="collapsed", key="resource_select")
                 
-                st.markdown("#### Do you want to meet face to face?")
-                st.pills("Meeting Preference", ["Yes", "No"], label_visibility="collapsed", key="meeting_select")
+                st.markdown("#### Möchten Sie sich persönlich treffen?" if lang == "DE" else "#### Do you want to meet face to face?")
+                st.pills("Treffen", ["Ja", "Nein"] if lang == "DE" else ["Yes", "No"], label_visibility="collapsed", key="meeting_select")
             
-            # --- NAVIGATION ---
             st.markdown("<br>", unsafe_allow_html=True)
             c1, c2 = st.columns(2)
-            if c1.button("Next ➔", type="tertiary"):
-                st.toast("System auto-tagged your description with [Infrastructure] and [Accessibility].", icon="🤖")
+            if c1.button("Weiter ➔" if lang == "DE" else "Next ➔", type="tertiary"):
+                st.toast("System hat Tags hinzugefügt: [Infrastruktur] [Barrierefreiheit]" if lang == "DE" else "Auto-tagged: [Infrastructure] [Accessibility]", icon="🤖")
                 st.session_state.wizard_step = 2
                 st.rerun()
-            if c2.button("💾 Save Draft", type="tertiary"):
-                st.toast("Draft saved locally!", icon="💾")
+            if c2.button("💾 Entwurf speichern" if lang == "DE" else "💾 Save Draft", type="tertiary"):
+                st.toast("Entwurf lokal gespeichert!" if lang == "DE" else "Draft saved locally!", icon="💾")
 
         elif st.session_state.wizard_step == 2:
-            st.subheader("2. Where is this located?")
-            st.text_input("Location", placeholder="E.g., Corner of 5th and Elm", label_visibility="collapsed")
+            st.subheader("2. Wo befindet sich das?" if lang == "DE" else "2. Where is this located?")
+            st.text_input("Ort", placeholder="Z.B. Ecke 5. Straße und Elm" if lang == "DE" else "E.g., Corner of 5th and Elm", label_visibility="collapsed")
             
             if not st.session_state.lite_mode:
-                st.caption("*(Interactive map would load here, disabled in Lite Mode)*")
+                st.caption("*(Interaktive Karte würde hier laden, im Lite-Modus deaktiviert)*" if lang == "DE" else "*(Interactive map disabled in Lite Mode)*")
                 
             c1, c2, c3 = st.columns(3)
-            if c1.button("⬅ Back", type="tertiary"):
+            if c1.button("⬅ Zurück" if lang == "DE" else "⬅ Back", type="tertiary"):
                 st.session_state.wizard_step = 1
                 st.rerun()
-            if c2.button("Next ➔", type="tertiary"):
+            if c2.button("Weiter ➔" if lang == "DE" else "Next ➔", type="tertiary"):
                 st.session_state.wizard_step = 3
                 st.rerun()
-            if c3.button("💾 Draft", type="tertiary"):
-                st.toast("Draft saved locally!", icon="💾")
+            if c3.button("💾 Entwurf" if lang == "DE" else "💾 Draft", type="tertiary"):
+                st.toast("Gespeichert!" if lang == "DE" else "Saved!", icon="💾")
 
         elif st.session_state.wizard_step == 3:
-            st.subheader("3. Review & Submit")
-            st.info("Your idea looks great. Ready to share it with the community?")
+            st.subheader("3. Überprüfen & Einreichen" if lang == "DE" else "3. Review & Submit")
+            st.info("Ihre Idee sieht gut aus. Bereit, sie mit der Community zu teilen?" if lang == "DE" else "Idea looks great. Ready to share?")
             
             c1, c2 = st.columns(2)
-            if c1.button("⬅ Back", type="tertiary"):
+            if c1.button("⬅ Zurück" if lang == "DE" else "⬅ Back", type="tertiary"):
                 st.session_state.wizard_step = 2
                 st.rerun()
-            if c2.button("✅ Submit", type="tertiary"):
-                st.toast("Idea Submitted! You'll be notified of reviews.", icon="🎉")
+            if c2.button("✅ Einreichen" if lang == "DE" else "✅ Submit", type="tertiary"):
+                st.toast("Idee eingereicht! Sie werden bei Neuigkeiten benachrichtigt." if lang == "DE" else "Idea Submitted! You'll be notified.", icon="🎉")
                 st.session_state.wizard_step = 1
                 time.sleep(2)
                 navigate_to('home')
 
 
 def dashboard_page():
-    if st.button("🦇", type="secondary"):
-        navigate_to('home')
+    if st.button("🦇", type="secondary"): navigate_to('home')
         
     st.markdown("---")
-    st.markdown("<h1 style='text-align: center;'>MY DASHBOARD</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h1 style='text-align: center;'>{'MEIN DASHBOARD' if lang == 'DE' else 'MY DASHBOARD'}</h1>", unsafe_allow_html=True)
     
-    st.selectbox("Currently acting on behalf of:", ["Myself", "Mrs. Schmidt (Proxy)", "Youth Center (Proxy)"])
+    opts = ["Ich selbst", "Frau Schmidt (Vertretung)", "Jugendzentrum (Vertretung)"] if lang == "DE" else ["Myself", "Mrs. Schmidt (Proxy)", "Youth Center (Proxy)"]
+    st.selectbox("Derzeit handelnd im Namen von:" if lang == "DE" else "Currently acting on behalf of:", opts)
     st.markdown("<br>", unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("My Identity & Skills")
-        st.multiselect("Identity Chips:", ["Beginner", "Happy to Guide", "Rural Local", "Tech Helper", "Translator"], default=["Happy to Guide", "Rural Local"])
+        st.subheader("Identität & Fähigkeiten" if lang == "DE" else "My Identity & Skills")
+        chips = ["Anfänger", "Helfe gerne", "Einheimischer", "Technik-Helfer", "Übersetzer"] if lang == "DE" else ["Beginner", "Happy to Guide", "Rural Local", "Tech Helper", "Translator"]
+        def_chips = ["Helfe gerne", "Einheimischer"] if lang == "DE" else ["Happy to Guide", "Rural Local"]
+        st.multiselect("Identitäts-Chips:" if lang == "DE" else "Identity Chips:", chips, default=def_chips)
         
         st.markdown("<br>", unsafe_allow_html=True)
-        with st.expander("🛡️ Privacy Control Center"):
-            st.toggle("Show my real name to neighbors", value=True)
-            st.toggle("Allow algorithm to suggest my ideas", value=True)
-            if st.button("Forget My Data & Remove", type="tertiary"):
-                st.toast("Secure data removal initiated.", icon="🗑️")
+        with st.expander("🛡️ Datenschutz-Kontrollzentrum" if lang == "DE" else "🛡️ Privacy Control Center"):
+            st.toggle("Echten Namen für Nachbarn anzeigen" if lang == "DE" else "Show my real name to neighbors", value=True)
+            st.toggle("Erlaube Algorithmus, meine Ideen vorzuschlagen" if lang == "DE" else "Allow algorithm to suggest my ideas", value=True)
+            if st.button("Meine Daten vergessen & Löschen" if lang == "DE" else "Forget My Data & Remove", type="tertiary"):
+                st.toast("Sicheres Löschen initiiert." if lang == "DE" else "Secure removal initiated.", icon="🗑️")
 
     with col2:
-        st.subheader("👋 Meet the Community")
+        st.subheader("👋 Community treffen" if lang == "DE" else "👋 Meet the Community")
         with st.container(border=True):
-            st.markdown("**Sarah T.** *(Tech Helper)*")
-            if st.button("Say Hello to Sarah", type="tertiary", key="h1"): st.toast("Message sent!")
+            st.markdown(f"**Sarah T.** *({'Technik-Helfer' if lang == 'DE' else 'Tech Helper'})*")
+            if st.button("Hallo sagen zu Sarah" if lang == "DE" else "Say Hello to Sarah", type="tertiary", key="h1"): st.toast("Gesendet!" if lang == "DE" else "Sent!")
         with st.container(border=True):
-            st.markdown("**Elena R.** *(Translator)*")
-            if st.button("Say Hello to Elena", type="tertiary", key="h2"): st.toast("Message sent!")
+            st.markdown(f"**Elena R.** *({'Übersetzer' if lang == 'DE' else 'Translator'})*")
+            if st.button("Hallo sagen zu Elena" if lang == "DE" else "Say Hello to Elena", type="tertiary", key="h2"): st.toast("Gesendet!" if lang == "DE" else "Sent!")
 
     st.markdown("---")
-    st.subheader("My Submitted Ideas")
+    st.subheader("Meine eingereichten Ideen" if lang == "DE" else "My Submitted Ideas")
     with st.container(border=True):
-        st.markdown("**Expand community garden operating hours**")
-        st.progress(75, text="Status: City Feedback (Current)")
-        st.caption("Submitted ➔ Community Review ➔ **City Feedback (Current)** ➔ Action")
-        st.info("The City Parks Department is currently reviewing the budget for this proposal. Expected update: Next Tuesday.")
+        st.markdown("**Öffnungszeiten des Gemeinschaftsgartens verlängern**" if lang == "DE" else "**Expand community garden operating hours**")
+        p_text = "Status: Feedback der Stadt (Aktuell)" if lang == "DE" else "Status: City Feedback (Current)"
+        st.progress(75, text=p_text)
+        st.caption("Eingereicht ➔ Community Review ➔ **Feedback der Stadt (Aktuell)** ➔ Aktion" if lang == "DE" else "Submitted ➔ Community Review ➔ **City Feedback (Current)** ➔ Action")
+        st.info("Das städtische Grünflächenamt prüft derzeit das Budget für diesen Vorschlag. Erwartetes Update: Nächsten Dienstag." if lang == "DE" else "The City Parks Department is currently reviewing the budget. Expected update: Next Tuesday.")
 
 
 def admin_page():
-    if st.button("🦇", type="secondary"):
-        navigate_to('home')
+    if st.button("🦇", type="secondary"): navigate_to('home')
         
     st.markdown("---")
-    st.markdown("<h1 style='text-align: center;'>CITY ADMIN</h1>", unsafe_allow_html=True)
-    st.write("Ensure citizens feel heard and respected.")
+    st.markdown(f"<h1 style='text-align: center;'>{'STADTVERWALTUNG' if lang == 'DE' else 'CITY ADMIN'}</h1>", unsafe_allow_html=True)
+    st.write("Stellen Sie sicher, dass Bürger sich gehört und respektiert fühlen." if lang == "DE" else "Ensure citizens feel heard and respected.")
     
-    st.subheader("⚠️ Overdue Feedback")
-    st.caption("These ideas have passed community review and await official acknowledgement.")
+    st.subheader("⚠️ Überfälliges Feedback" if lang == "DE" else "⚠️ Overdue Feedback")
+    st.caption("Diese Ideen haben das Community-Review bestanden und warten auf offizielle Bestätigung." if lang == "DE" else "These ideas await official acknowledgement.")
     
     with st.container(border=True):
-        st.markdown("**Idea:** Fix potholes on Route 9 *(Submitted by: David L.)*")
-        st.error("Waiting for response for 4 days.")
+        st.markdown("**Idee:** Schlaglöcher auf Route 9 reparieren *(Von: David L.)*" if lang == "DE" else "**Idea:** Fix potholes on Route 9 *(By: David L.)*")
+        st.error("Wartet seit 4 Tagen auf Antwort." if lang == "DE" else "Waiting for response for 4 days.")
         
         c1, c2 = st.columns([3, 1])
         with c1:
-            st.selectbox("Empathetic Response Template:", 
-                         ["Great idea, reviewing budget now.", "Thank you, added to maintenance queue."], key="t1")
+            opts = ["Tolle Idee, wir prüfen das Budget.", "Danke, zur Wartungsliste hinzugefügt."] if lang == "DE" else ["Great idea, reviewing budget now.", "Thank you, added to maintenance queue."]
+            st.selectbox("Empathische Antwort-Vorlage:" if lang == "DE" else "Empathetic Response Template:", opts, key="t1")
         with c2:
             st.write("") 
-            if st.button("Send 1-Click Reply", type="tertiary", key="r1"):
-                st.toast("Reply sent to David L.", icon="✉️")
+            if st.button("1-Klick-Antwort senden" if lang == "DE" else "Send 1-Click Reply", type="tertiary", key="r1"):
+                st.toast("Antwort gesendet an David L." if lang == "DE" else "Reply sent to David L.", icon="✉️")
+
+
+def how_it_works_page():
+    if st.button("🦇", type="secondary"): navigate_to('home')
+        
+    st.markdown("---")
+    st.markdown(f"<h1 style='text-align: center;'>{'WIE ES FUNKTIONIERT' if lang == 'DE' else 'HOW IT WORKS'}</h1>", unsafe_allow_html=True)
+    
+    if lang == "DE":
+        st.write("ROBIN ist so konzipiert, dass alle Stimmen in unserer Stadt gleichermaßen gehört werden. Hier ist, wie unser Algorithmus und unsere Plattform Sie schützen:")
+        
+        st.subheader("⚖️ 1. Der Gerechtigkeits-Algorithmus (Equity-Weighted Feed)")
+        st.write("Ideen werden nicht nur danach sortiert, wer die meisten Freunde hat. Unser Algorithmus hebt gezielt Vorschläge aus Vierteln hervor, die historisch weniger Aufmerksamkeit erhalten haben, oder Projekte, die noch vielfältige Perspektiven (wie von Senioren oder Jugendlichen) benötigen.")
+        
+        st.subheader("🌐 2. Barrierefreiheit & Offline-Modus")
+        st.write("Nicht jeder hat schnelles Internet. Sie können den **Lite-Modus** in den Einstellungen aktivieren, um Daten zu sparen. Falls Sie die Verbindung verlieren, speichert die App Ihre Eingaben sicher auf Ihrem Gerät und synchronisiert sie später.")
+        
+        st.subheader("🛡️ 3. Datensouveränität")
+        st.write("Sie besitzen Ihre Daten. Im *Datenschutz-Kontrollzentrum* auf Ihrem Dashboard können Sie jederzeit auf den roten Knopf drücken, um Ihre Daten vollständig aus dem System und dem Empfehlungsalgorithmus zu löschen.")
+    else:
+        st.write("ROBIN is designed to ensure all voices in our city are heard equally. Here is how our algorithm and platform protect you:")
+        
+        st.subheader("⚖️ 1. The Equity-Weighted Feed")
+        st.write("Ideas are not just sorted by who has the most friends. Our algorithm deliberately highlights proposals from neighborhoods that have historically received less attention, or projects that still need diverse perspectives (like from seniors or youth).")
+        
+        st.subheader("🌐 2. Accessibility & Offline Mode")
+        st.write("Not everyone has fast internet. You can activate **Lite Mode** in the settings to save data. If you lose connection, the app securely saves your typing to your device and syncs it later.")
+        
+        st.subheader("🛡️ 3. Data Sovereignty")
+        st.write("You own your data. In the *Privacy Control Center* on your dashboard, you can hit the red button at any time to completely erase your data from the system and the recommendation algorithm.")
 
 # ==========================================
 # 6. MAIN CONTROLLER
@@ -404,3 +467,5 @@ elif st.session_state.page == 'dashboard':
     dashboard_page()
 elif st.session_state.page == 'admin':
     admin_page()
+elif st.session_state.page == 'how_it_works':
+    how_it_works_page()
