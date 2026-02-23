@@ -60,7 +60,7 @@ st.markdown("""
         font-family: 'Helvetica', sans-serif !important;
         
         width: 100% !important;
-        min-height: 40vh !important; /* Slightly adjusted for a 2x2 grid */
+        min-height: 40vh !important; 
         padding: 40px !important;
         margin-top: 20px !important;
         
@@ -131,19 +131,21 @@ st.markdown("""
     }
 
     /* Headings & Text */
-    h1, h2, h3, p, label, .stMarkdown {
+    h1, h2, h3, h4, p, label, .stMarkdown {
         color: var(--text-mint) !important;
         font-family: 'Helvetica', sans-serif;
     }
     
-    /* Inputs */
+    /* Safely scoped Inputs to prevent weird stretching */
     .stTextInput > div > div > input, 
     .stTextArea > div > div > textarea,
-    .stSelectbox > div > div > div {
+    .stSelectbox > div > div > div,
+    .stMultiSelect > div > div > div {
         background-color: var(--box-bg) !important;
         color: var(--text-mint) !important;
         border: 2px solid var(--text-mint) !important;
         border-radius: 10px !important;
+        min-height: auto !important;
     }
 
     /* Hide default menus */
@@ -159,7 +161,6 @@ st.markdown("""
 # ==========================================
 with st.sidebar:
     st.markdown("<h2 style='text-align: center;'>⚙️ Settings</h2>", unsafe_allow_html=True)
-    # 1. Hardware & Access: Lite Mode Toggle
     st.session_state.lite_mode = st.toggle("Lite Mode (Slow Internet)", value=st.session_state.lite_mode, help="Disables images and heavy media to save data.")
     st.caption("Toggle this if your connection is unstable.")
 
@@ -171,7 +172,6 @@ def support_dialog(project_id, project_title):
     st.markdown(f"**Idea:** {project_title}")
     st.write("Help the community understand the consensus behind this idea.")
     
-    # 4. Power Dynamics: Deliberative Consensus Options
     reason = st.radio("Select your primary reason:", ["Improves Safety", "Saves Money", "Builds Community", "Other"], label_visibility="collapsed")
     
     if st.button("Confirm Support", type="tertiary"):
@@ -189,7 +189,6 @@ def home_page():
     st.markdown("<h1 style='text-align: center; font-size: 5rem; margin-bottom: 20px;'>ROBIN</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center; margin-bottom: 40px;'>Civic Inclusion Platform</h3>", unsafe_allow_html=True)
     
-    # 2x2 Grid for massive touch-friendly navigation
     col1, col2 = st.columns(2)
     with col1:
         if st.button("COMMUNITY FEED\n\nSee what your neighbors are suggesting and vote on ideas.", type="primary"):
@@ -211,12 +210,10 @@ def feed_page():
     st.markdown("---")
     st.markdown("<h1 style='text-align: center; font-size: 3rem;'>COMMUNITY FEED</h1>", unsafe_allow_html=True)
     
-    # 4. Power Dynamics: Micro-Wins Ticker
     st.info("📣 **Micro-Wins:** Tom shared his ladder with Anna. | The library got 50 new books! | Streetlight on 5th repaired.", icon="✨")
     
     col1, col2 = st.columns([2, 1])
     with col2:
-        # 5. Time Poverty: Micro-Participation Poll
         with st.container(border=True):
             st.subheader("⏱️ Got 60 Seconds?")
             st.write("Help shape your neighborhood:")
@@ -225,21 +222,17 @@ def feed_page():
                 st.toast("Vote recorded! You just shaped local policy.", icon="🎉")
 
     with col1:
-        # 4. Power Dynamics: Equity-Weighted Feed
         sort_by = st.selectbox("Sort community ideas by:", ["Needs Your Voice", "Most Popular", "Recently Added"], index=0)
         
         for idea in st.session_state.mock_ideas:
             with st.container(border=True):
                 st.markdown(f"### {idea['title']}")
                 st.write(idea['desc'])
-                
-                # 4. Power Dynamics: XAI Labels
                 st.caption(f"✨ *Algorithm matched this because you follow [{idea['tag']}] and live in [{idea['sector']}].*")
                 
                 if idea['id'] in st.session_state.supported_projects:
                     st.button("✅ Supported", disabled=True, key=f"btn_disabled_{idea['id']}")
                 else:
-                    # 4. Power Dynamics: Deliberative Consensus 
                     if st.button("🤝 Support this Idea", key=f"btn_support_{idea['id']}", type="tertiary"):
                         support_dialog(idea['id'], idea['title'])
 
@@ -249,29 +242,42 @@ def submit_page():
         navigate_to('home')
         
     st.markdown("---")
-    
-    # 1. Hardware & Access: Offline Banner
     st.warning("📡 **You are currently offline.** Your typing is automatically saved to your device.", icon="⚠️")
     
     st.markdown("<h1 style='text-align: center;'>SUBMIT AN IDEA</h1>", unsafe_allow_html=True)
     st.progress(st.session_state.wizard_step / 3.0, text=f"Step {st.session_state.wizard_step} of 3")
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 6. Self-Efficacy: Scaffolded Wizard UI
     _, center, _ = st.columns([1, 2, 1])
     
     with center:
         if st.session_state.wizard_step == 1:
             st.subheader("1. What is the problem or idea?")
-            st.text_area("Description", placeholder="E.g., The sidewalk on Main St. is broken...", label_visibility="collapsed")
             
-            # 6. Self-Efficacy: Multi-Modal Voice Input
-            st.write("**Or, record a voice message:**")
-            st.audio_input("Record your voice", label_visibility="collapsed")
+            # --- ASSISTED MODE INTEGRATION ---
+            assisted_mode = st.toggle("Assisted Mode (Step-by-step guidance)")
+            st.markdown("<br>", unsafe_allow_html=True)
             
+            if not assisted_mode:
+                st.text_area("Description", placeholder="E.g., The sidewalk on Main St. is broken...", label_visibility="collapsed")
+                st.write("**Or, record a voice message:**")
+                st.audio_input("Record your voice", label_visibility="collapsed")
+            else:
+                st.markdown("#### What kind of project is it?")
+                # Using pills avoids the expanding height bug entirely
+                st.pills("Project Type", ["Quick fix", "Big idea", "Other"], label_visibility="collapsed", key="type_select")
+                
+                st.markdown("#### What resources do you need?")
+                resources = ["Hammer", "Workspace", "Drill", "3D Printer", "Paint", "Wood", "Metal", "Soldering Iron", "Laptop"]
+                st.multiselect("Resources", resources, label_visibility="collapsed", key="resource_select")
+                
+                st.markdown("#### Do you want to meet face to face?")
+                st.pills("Meeting Preference", ["Yes", "No"], label_visibility="collapsed", key="meeting_select")
+            
+            # --- NAVIGATION ---
+            st.markdown("<br>", unsafe_allow_html=True)
             c1, c2 = st.columns(2)
             if c1.button("Next ➔", type="tertiary"):
-                # Vernacular Mapping Toast
                 st.toast("System auto-tagged your description with [Infrastructure] and [Accessibility].", icon="🤖")
                 st.session_state.wizard_step = 2
                 st.rerun()
@@ -317,18 +323,15 @@ def dashboard_page():
     st.markdown("---")
     st.markdown("<h1 style='text-align: center;'>MY DASHBOARD</h1>", unsafe_allow_html=True)
     
-    # 2. Relational Onboarding & Social Proxy
     st.selectbox("Currently acting on behalf of:", ["Myself", "Mrs. Schmidt (Proxy)", "Youth Center (Proxy)"])
     st.markdown("<br>", unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     with col1:
-        # 3. Identity Friction: Mentorship Badges
         st.subheader("My Identity & Skills")
         st.multiselect("Identity Chips:", ["Beginner", "Happy to Guide", "Rural Local", "Tech Helper", "Translator"], default=["Happy to Guide", "Rural Local"])
         
         st.markdown("<br>", unsafe_allow_html=True)
-        # 3. Privacy / Data Sovereignty
         with st.expander("🛡️ Privacy Control Center"):
             st.toggle("Show my real name to neighbors", value=True)
             st.toggle("Allow algorithm to suggest my ideas", value=True)
@@ -336,7 +339,6 @@ def dashboard_page():
                 st.toast("Secure data removal initiated.", icon="🗑️")
 
     with col2:
-        # 2. Relational Matchmaking
         st.subheader("👋 Meet the Community")
         with st.container(border=True):
             st.markdown("**Sarah T.** *(Tech Helper)*")
@@ -346,7 +348,6 @@ def dashboard_page():
             if st.button("Say Hello to Elena", type="tertiary", key="h2"): st.toast("Message sent!")
 
     st.markdown("---")
-    # 7. The Feedback Void: Pizza Tracker
     st.subheader("My Submitted Ideas")
     with st.container(border=True):
         st.markdown("**Expand community garden operating hours**")
@@ -363,7 +364,6 @@ def admin_page():
     st.markdown("<h1 style='text-align: center;'>CITY ADMIN</h1>", unsafe_allow_html=True)
     st.write("Ensure citizens feel heard and respected.")
     
-    # 7. The Feedback Void: Mandated Micro-Responses
     st.subheader("⚠️ Overdue Feedback")
     st.caption("These ideas have passed community review and await official acknowledgement.")
     
@@ -373,12 +373,12 @@ def admin_page():
         
         c1, c2 = st.columns([3, 1])
         with c1:
-            template = st.selectbox("Empathetic Response Template:", 
-                                    ["Great idea, reviewing budget now.", "Thank you, added to maintenance queue."], key="t1")
+            st.selectbox("Empathetic Response Template:", 
+                         ["Great idea, reviewing budget now.", "Thank you, added to maintenance queue."], key="t1")
         with c2:
             st.write("") 
             if st.button("Send 1-Click Reply", type="tertiary", key="r1"):
-                st.toast(f"Reply sent to David L.", icon="✉️")
+                st.toast("Reply sent to David L.", icon="✉️")
 
 # ==========================================
 # 6. MAIN CONTROLLER
