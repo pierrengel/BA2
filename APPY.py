@@ -11,6 +11,8 @@ if 'page' not in st.session_state:
     st.session_state.page = 'home'
 if "wizard_step" not in st.session_state:
     st.session_state.wizard_step = 1
+if "submission_type" not in st.session_state:
+    st.session_state.submission_type = "resources" # Default
 if "lite_mode" not in st.session_state:
     st.session_state.lite_mode = False
 if "lang" not in st.session_state:
@@ -236,8 +238,9 @@ def home_page():
         if st.button(lbl_dash, type="primary"): navigate_to('dashboard')
 
     with col2:
+        # Submit Button now routes to the choice page
         lbl_submit = "**IDEE EINREICHEN**\n\nMelden Sie ein Problem oder eine Idee." if lang == "DE" else "**SUBMIT AN IDEA**\n\nReport a problem or share an idea."
-        if st.button(lbl_submit, type="primary"): navigate_to('submit')
+        if st.button(lbl_submit, type="primary"): navigate_to('submit_choice')
             
         lbl_how = "**WIE ES FUNKTIONIERT**\n\nSo sorgt der Algorithmus für Fairness." if lang == "DE" else "**HOW IT WORKS**\n\nHow our algorithm ensures fairness."
         if st.button(lbl_how, type="primary"): navigate_to('how_it_works')
@@ -248,6 +251,124 @@ def home_page():
 
         lbl_admin = "**STADTVERWALTUNG**\n\n(Nur Personal) Feedback-Schleife schließen." if lang == "DE" else "**CITY ADMIN**\n\n(Staff Only) Close the feedback loop."
         if st.button(lbl_admin, type="primary"): navigate_to('admin')
+
+
+def submit_choice_page():
+    if st.button("🦇", type="secondary"): navigate_to('home')
+    st.markdown("---")
+    
+    title = "Welche Art von Unterstützung benötigen Sie?" if lang == "DE" else "What kind of support do you need?"
+    st.markdown(f"<h1 style='text-align: center;'>{title}</h1><br><br>", unsafe_allow_html=True)
+    
+    _, col1, col2, _ = st.columns([1, 2, 2, 1])
+    
+    with col1:
+        lbl_fin = "**FINANZIELLE HILFE**\n\nBeantragen Sie Mikrostipendien oder Gemeindefinanzierung." if lang == "DE" else "**FINANCIAL HELP**\n\nApply for micro-grants or community funding."
+        if st.button(lbl_fin, type="primary"):
+            st.session_state.submission_type = "financial"
+            st.session_state.wizard_step = 1
+            navigate_to('submit')
+            
+    with col2:
+        lbl_res = "**RESSOURCEN & HILFE**\n\nFinden Sie Werkzeuge, Freiwillige oder Platz für Ihr Projekt." if lang == "DE" else "**RESOURCES & HELP**\n\nFind tools, volunteers, or space for your project."
+        if st.button(lbl_res, type="primary"):
+            st.session_state.submission_type = "resources"
+            st.session_state.wizard_step = 1
+            navigate_to('submit')
+
+
+def submit_page():
+    if st.button("🦇", type="secondary"): navigate_to('submit_choice')
+    
+    st.markdown("---")
+    st.warning("📡 **Sie sind offline.** Ihre Eingaben werden auf dem Gerät gespeichert." if lang == "DE" else "📡 **You are offline.** Your typing is automatically saved to your device.", icon="⚠️")
+    
+    st.markdown(f"<h1 style='text-align: center;'>{'IDEE EINREICHEN' if lang == 'DE' else 'SUBMIT AN IDEA'}</h1>", unsafe_allow_html=True)
+    st.progress(st.session_state.wizard_step / 3.0)
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    _, center, _ = st.columns([1, 2, 1])
+    
+    with center:
+        if st.session_state.wizard_step == 1:
+            st.subheader("1. Was ist das Problem oder die Idee?" if lang == "DE" else "1. What is the problem or idea?")
+            
+            # --- ASSISTED MODE RESTORED ---
+            assisted_mode = st.toggle("Assistenz-Modus (Schritt-für-Schritt)" if lang == "DE" else "Assisted Mode (Step-by-step guidance)", value=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            if not assisted_mode:
+                p_text = "Z.B. Der Bürgersteig auf der Hauptstraße ist kaputt..." if lang == "DE" else "E.g., The sidewalk on Main St. is broken..."
+                st.text_area("Beschreibung", placeholder=p_text, label_visibility="collapsed", key="ta_desc")
+                st.write("**Oder sprechen Sie eine Nachricht ein:**" if lang == "DE" else "**Or, record a voice message:**")
+                st.audio_input("Sprachaufnahme" if lang == "DE" else "Record your voice", label_visibility="collapsed")
+            else:
+                # DYNAMIC ASSISTED MODE BASED ON ROUTE SELECTION
+                if st.session_state.submission_type == "financial":
+                    st.markdown("#### Geschätztes benötigtes Budget:" if lang == "DE" else "#### Estimated Budget Needed:")
+                    b_opts = ["Bis zu 50€", "50€ - 200€", "200€ - 500€", "Mehr als 500€"] if lang == "DE" else ["Up to 50€", "50€ - 200€", "200€ - 500€", "Over 500€"]
+                    st.selectbox("Budget", b_opts, label_visibility="collapsed", key="fin_budget")
+                    
+                    st.markdown("#### Art der Finanzierung:" if lang == "DE" else "#### Type of Funding:")
+                    f_opts = ["Mikrozuschuss", "Spenden", "Stadtbudget"] if lang == "DE" else ["Micro-grant", "Donations", "City Budget"]
+                    st.pills("Finanzierungstyp", f_opts, label_visibility="collapsed", key="fin_type")
+                    
+                    st.markdown("#### Projektphase:" if lang == "DE" else "#### Project Phase:")
+                    p_opts = ["Nur eine Idee", "In Planung", "Startklar"] if lang == "DE" else ["Just an idea", "Planning", "Ready to start"]
+                    st.pills("Phase", p_opts, label_visibility="collapsed", key="fin_phase")
+
+                else: # "resources" default
+                    st.markdown("#### Um welche Art von Projekt handelt es sich?" if lang == "DE" else "#### What kind of project is it?")
+                    t_opts = ["Schnelle Lösung", "Große Idee", "Sonstiges"] if lang == "DE" else ["Quick fix", "Big idea", "Other"]
+                    st.pills("Typ", t_opts, label_visibility="collapsed", key="res_type")
+                    
+                    st.markdown("#### Welche Ressourcen benötigen Sie?" if lang == "DE" else "#### What resources do you need?")
+                    r_opts = ["Hammer", "Arbeitsplatz", "Bohrmaschine", "3D-Drucker", "Farbe", "Holz", "Metall", "Lötkolben", "Laptop"] if lang == "DE" else ["Hammer", "Workspace", "Drill", "3D Printer", "Paint", "Wood", "Metal", "Soldering Iron", "Laptop"]
+                    st.multiselect("Ressourcen", r_opts, label_visibility="collapsed", key="res_items")
+                    
+                    st.markdown("#### Möchten Sie sich persönlich treffen?" if lang == "DE" else "#### Do you want to meet face to face?")
+                    st.pills("Treffen", ["Ja", "Nein"] if lang == "DE" else ["Yes", "No"], label_visibility="collapsed", key="res_meet")
+            
+            # --- NAVIGATION ---
+            st.markdown("<br>", unsafe_allow_html=True)
+            c1, c2 = st.columns(2)
+            if c1.button("Weiter ➔" if lang == "DE" else "Next ➔", type="tertiary"):
+                st.session_state.wizard_step = 2
+                st.rerun()
+            if c2.button("💾 Entwurf speichern" if lang == "DE" else "💾 Save Draft", type="tertiary"):
+                st.toast("Entwurf lokal gespeichert!" if lang == "DE" else "Draft saved locally!", icon="💾")
+
+        elif st.session_state.wizard_step == 2:
+            st.subheader("2. Wo befindet sich das?" if lang == "DE" else "2. Where is this located?")
+            st.text_input("Ort", placeholder="Z.B. Ecke 5. Straße und Elm" if lang == "DE" else "E.g., Corner of 5th and Elm", label_visibility="collapsed")
+            
+            if not st.session_state.lite_mode:
+                st.caption("*(Interaktive Karte würde hier laden, im Lite-Modus deaktiviert)*" if lang == "DE" else "*(Interactive map disabled in Lite Mode)*")
+                
+            c1, c2, c3 = st.columns(3)
+            if c1.button("⬅ Zurück" if lang == "DE" else "⬅ Back", type="tertiary"):
+                st.session_state.wizard_step = 1
+                st.rerun()
+            if c2.button("Weiter ➔" if lang == "DE" else "Next ➔", type="tertiary"):
+                st.session_state.wizard_step = 3
+                st.rerun()
+            if c3.button("💾 Entwurf" if lang == "DE" else "💾 Draft", type="tertiary"):
+                st.toast("Gespeichert!" if lang == "DE" else "Saved!", icon="💾")
+
+        elif st.session_state.wizard_step == 3:
+            st.subheader("3. Überprüfen & Einreichen" if lang == "DE" else "3. Review & Submit")
+            st.info("Ihre Idee sieht gut aus. Bereit, sie mit der Community zu teilen?" if lang == "DE" else "Idea looks great. Ready to share?")
+            
+            c1, c2 = st.columns(2)
+            if c1.button("⬅ Zurück" if lang == "DE" else "⬅ Back", type="tertiary"):
+                st.session_state.wizard_step = 2
+                st.rerun()
+            if c2.button("✅ Einreichen" if lang == "DE" else "✅ Submit", type="tertiary"):
+                st.toast("Idee eingereicht! Sie werden bei Neuigkeiten benachrichtigt." if lang == "DE" else "Idea Submitted! You'll be notified.", icon="🎉")
+                st.session_state.wizard_step = 1
+                time.sleep(2)
+                navigate_to('home')
+
 
 def feed_page():
     if st.button("🦇", type="secondary"): navigate_to('home')
@@ -263,33 +384,6 @@ def feed_page():
             else:
                 if st.button("🤝 Idee unterstützen" if lang == "DE" else "🤝 Support this Idea", key=f"btn_support_{idea['id']}", type="tertiary"):
                     support_dialog(idea['id'], idea['title'])
-
-def submit_page():
-    if st.button("🦇", type="secondary"): navigate_to('home')
-    st.markdown(f"<h1 style='text-align: center;'>{'IDEE EINREICHEN' if lang == 'DE' else 'SUBMIT AN IDEA'}</h1>", unsafe_allow_html=True)
-    st.progress(st.session_state.wizard_step / 3.0)
-    
-    _, center, _ = st.columns([1, 2, 1])
-    with center:
-        if st.session_state.wizard_step == 1:
-            st.subheader("1. Was ist das Problem?" if lang == "DE" else "1. What is the problem?")
-            st.text_area("Beschreibung", placeholder="Hier schreiben..." if lang == "DE" else "Type here...", label_visibility="collapsed")
-            if st.button("Weiter ➔" if lang == "DE" else "Next ➔", type="tertiary"):
-                st.session_state.wizard_step = 2
-                st.rerun()
-        elif st.session_state.wizard_step == 2:
-            st.subheader("2. Wo befindet sich das?" if lang == "DE" else "2. Where is this located?")
-            st.text_input("Ort", placeholder="Z.B. Nordpark" if lang == "DE" else "E.g. North Park", label_visibility="collapsed")
-            if st.button("Weiter ➔" if lang == "DE" else "Next ➔", type="tertiary"):
-                st.session_state.wizard_step = 3
-                st.rerun()
-        elif st.session_state.wizard_step == 3:
-            st.subheader("3. Überprüfen & Einreichen" if lang == "DE" else "3. Review & Submit")
-            if st.button("✅ Einreichen" if lang == "DE" else "✅ Submit", type="tertiary"):
-                st.toast("Erfolgreich eingereicht!" if lang == "DE" else "Successfully submitted!", icon="🎉")
-                st.session_state.wizard_step = 1
-                time.sleep(1)
-                navigate_to('home')
 
 def dashboard_page():
     if st.button("🦇", type="secondary"): navigate_to('home')
@@ -312,6 +406,7 @@ def success_page():
 # 6. MAIN CONTROLLER
 # ==========================================
 if st.session_state.page == 'home': home_page()
+elif st.session_state.page == 'submit_choice': submit_choice_page()
 elif st.session_state.page == 'feed': feed_page()
 elif st.session_state.page == 'submit': submit_page()
 elif st.session_state.page == 'dashboard': dashboard_page()
