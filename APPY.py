@@ -103,15 +103,15 @@ st.markdown("""
     
     div.stButton > button[kind="secondary"]:hover {
         transform: scale(1.1) !important; 
-        background-color: #ffffff !important; 
+        background-color: #e0e0e0 !important; /* Light Gray */
     }
 
     /* =========================================
-       STYLE 3: THE SUBMIT BUTTON (Tertiary Buttons) 
+       STYLE 3: THE MINT BOXES (Tertiary Buttons) 
        ========================================= */
     div.stButton > button[kind="tertiary"] {
         background-color: var(--text-mint) !important;
-        color: var(--text-dark) !important;
+        color: var(--text-dark) !important; /* Dark Blue */
         border: none !important;
         border-radius: 10px !important;
         
@@ -125,9 +125,18 @@ st.markdown("""
         margin-top: 20px !important;
     }
     
+    /* Force paragraph tags inside the button to be dark blue (stops mint inheritance) */
+    div.stButton > button[kind="tertiary"] p {
+        color: var(--text-dark) !important; 
+    }
+    
+    /* Hover state: Light Gray box, Dark Blue text */
     div.stButton > button[kind="tertiary"]:hover {
-        background-color: #ffffff !important;
-        transform: scale(1.01) !important;
+        background-color: #e0e0e0 !important; /* Light Gray */
+    }
+    
+    div.stButton > button[kind="tertiary"]:hover p {
+        color: var(--text-dark) !important; /* Stays Dark Blue */
     }
 
     /* Headings & Text */
@@ -264,7 +273,6 @@ def submit_page():
                 st.audio_input("Record your voice", label_visibility="collapsed")
             else:
                 st.markdown("#### What kind of project is it?")
-                # Using pills avoids the expanding height bug entirely
                 st.pills("Project Type", ["Quick fix", "Big idea", "Other"], label_visibility="collapsed", key="type_select")
                 
                 st.markdown("#### What resources do you need?")
