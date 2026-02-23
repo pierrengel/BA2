@@ -225,17 +225,15 @@ def home_page():
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("<h1 style='text-align: center; font-size: 6rem; margin-bottom: 40px;'>ROBIN</h1>", unsafe_allow_html=True)
     
-    # We use Markdown formatting (**Text**) in the button label to trigger the distinct "Title" CSS styling.
-    col1, col2 = st.columns(2)
+    # 3 Columns for a balanced 2x3 grid
+    col1, col2, col3 = st.columns(3)
+    
     with col1:
         lbl_feed = "**COMMUNITY-FEED**\n\nSehen Sie, was Ihre Nachbarn vorschlagen." if lang == "DE" else "**COMMUNITY FEED**\n\nSee what neighbors are suggesting."
         if st.button(lbl_feed, type="primary"): navigate_to('feed')
             
         lbl_dash = "**MEIN DASHBOARD**\n\nVerwalten Sie Ihre Ideen und Ihr Profil." if lang == "DE" else "**MY DASHBOARD**\n\nManage your ideas and profile."
         if st.button(lbl_dash, type="primary"): navigate_to('dashboard')
-            
-        lbl_admin = "**STADTVERWALTUNG**\n\n(Nur Personal) Feedback-Schleife schließen." if lang == "DE" else "**CITY ADMIN**\n\n(Staff Only) Close the feedback loop."
-        if st.button(lbl_admin, type="primary"): navigate_to('admin')
 
     with col2:
         lbl_submit = "**IDEE EINREICHEN**\n\nMelden Sie ein Problem oder eine Idee." if lang == "DE" else "**SUBMIT AN IDEA**\n\nReport a problem or share an idea."
@@ -244,8 +242,12 @@ def home_page():
         lbl_how = "**WIE ES FUNKTIONIERT**\n\nSo sorgt der Algorithmus für Fairness." if lang == "DE" else "**HOW IT WORKS**\n\nHow our algorithm ensures fairness."
         if st.button(lbl_how, type="primary"): navigate_to('how_it_works')
         
+    with col3:
         lbl_success = "**ERFOLGSGESCHICHTEN**\n\nPositive Veränderungen in der Nachbarschaft." if lang == "DE" else "**SUCCESS STORIES**\n\nPositive impact in the neighborhood."
         if st.button(lbl_success, type="primary"): navigate_to('success')
+
+        lbl_admin = "**STADTVERWALTUNG**\n\n(Nur Personal) Feedback-Schleife schließen." if lang == "DE" else "**CITY ADMIN**\n\n(Staff Only) Close the feedback loop."
+        if st.button(lbl_admin, type="primary"): navigate_to('admin')
 
 def feed_page():
     if st.button("🦇", type="secondary"): navigate_to('home')
