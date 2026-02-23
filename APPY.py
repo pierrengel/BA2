@@ -46,55 +46,54 @@ st.markdown("""
        STYLE 1: THE BIG BOXES (Primary Buttons) 
        ========================================= */
        
-    /* Force the invisible outer wrapper to be EXACTLY the same height */
-    div.stButton:has(button[kind="primary"]) {
-        height: 280px !important;
-        margin-bottom: 20px !important;
-    }
-
     div.stButton > button[kind="primary"] {
         background-color: var(--box-bg) !important;
         color: var(--text-mint) !important;
         border: none !important;
         border-radius: 15px !important;
         
-        text-align: left !important;
-        white-space: pre-wrap !important;
-        font-family: 'Helvetica', sans-serif !important;
-        
-        /* Strict sizing rules */
+        /* BULLETPROOF STRICT SIZING */
         width: 100% !important;
-        height: 280px !important;
-        min-height: 280px !important;
-        max-height: 280px !important;
-        padding: 30px !important;
+        height: 320px !important;
+        min-height: 320px !important;
+        max-height: 320px !important;
+        padding: 40px !important;
+        margin-top: 20px !important;
+        box-sizing: border-box !important;
         
-        /* Flexbox to keep text aligned to the top */
+        /* ALIGNMENT & OVERFLOW */
         display: flex !important;
         flex-direction: column !important;
         justify-content: flex-start !important;
         align-items: flex-start !important;
+        text-align: left !important;
+        white-space: pre-wrap !important;
+        overflow: hidden !important;
         
         transition: all 0.2s ease-in-out !important;
         box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
-        overflow: hidden !important;
     }
 
-    /* Target the text inside the primary buttons to make it large */
-    div.stButton > button[kind="primary"] p {
-        font-size: 24px !important; 
+    /* Target the text inside the primary buttons to make it LARGER */
+    div.stButton > button[kind="primary"] p, 
+    div.stButton > button[kind="primary"] div {
+        font-family: 'Helvetica', sans-serif !important;
+        font-size: 26px !important; 
+        font-weight: 500 !important;
         line-height: 1.4 !important;
         margin: 0 !important;
+        text-align: left !important;
+        color: var(--text-mint) !important;
     }
 
     div.stButton > button[kind="primary"]:hover {
         background-color: var(--text-mint) !important; 
-        color: var(--text-dark) !important;            
         transform: translateY(-5px) !important;
         box-shadow: 0 10px 20px rgba(0,0,0,0.4) !important;
     }
     
-    div.stButton > button[kind="primary"]:hover p {
+    div.stButton > button[kind="primary"]:hover p,
+    div.stButton > button[kind="primary"]:hover div {
         color: var(--text-dark) !important;
     }
 
