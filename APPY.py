@@ -43,53 +43,52 @@ st.markdown("""
     }
 
     /* =========================================
-       STYLE 1: THE BIG BOXES (Primary Buttons) 
+       STYLE 1: THE BIG SQUARES (Primary Buttons) 
        ========================================= */
        
     div.stButton > button[kind="primary"] {
         background-color: var(--box-bg) !important;
         color: var(--text-mint) !important;
         border: none !important;
-        border-radius: 15px !important;
+        border-radius: 20px !important; /* Slightly rounder corners for squares */
         
-        /* BULLETPROOF STRICT SIZING */
+        /* THE FIX FOR PERFECT SQUARES */
         width: 100% !important;
-        height: 320px !important;
-        min-height: 320px !important;
-        max-height: 320px !important;
-        padding: 40px !important;
-        margin-top: 20px !important;
+        aspect-ratio: 1 / 1 !important; /* Forces Height to equal Width */
         box-sizing: border-box !important;
+        margin-top: 20px !important;
+        padding: 35px !important;
         
         /* ALIGNMENT & OVERFLOW */
         display: flex !important;
         flex-direction: column !important;
-        justify-content: flex-start !important;
+        justify-content: flex-start !important; /* Align text to top */
         align-items: flex-start !important;
         text-align: left !important;
         white-space: pre-wrap !important;
-        overflow: hidden !important;
+        overflow: hidden !important; /* Hide text if it gets too long for the square */
         
         transition: all 0.2s ease-in-out !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+        box-shadow: 0 6px 14px rgba(0,0,0,0.3) !important;
     }
 
-    /* Target the text inside the primary buttons to make it LARGER */
+    /* Target the text inside the primary buttons */
     div.stButton > button[kind="primary"] p, 
     div.stButton > button[kind="primary"] div {
         font-family: 'Helvetica', sans-serif !important;
-        font-size: 26px !important; 
-        font-weight: 500 !important;
-        line-height: 1.4 !important;
+        font-size: 28px !important; /* Large, readable font */
+        font-weight: 600 !important;
+        line-height: 1.3 !important;
         margin: 0 !important;
         text-align: left !important;
         color: var(--text-mint) !important;
+        hyphens: auto !important; /* Break long words if needed */
     }
 
     div.stButton > button[kind="primary"]:hover {
         background-color: var(--text-mint) !important; 
-        transform: translateY(-5px) !important;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.4) !important;
+        transform: translateY(-8px) !important;
+        box-shadow: 0 12px 24px rgba(0,0,0,0.4) !important;
     }
     
     div.stButton > button[kind="primary"]:hover p,
@@ -240,33 +239,33 @@ def support_dialog(project_id, project_title):
 
 def home_page():
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; font-size: 5rem; margin-bottom: 40px;'>ROBIN</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; font-size: 6rem; margin-bottom: 40px;'>ROBIN</h1>", unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     with col1:
         # Box 1
-        lbl_feed = "COMMUNITY-FEED\n\nSehen Sie, was Ihre Nachbarn vorschlagen, und stimmen Sie ab." if lang == "DE" else "COMMUNITY FEED\n\nSee what your neighbors are suggesting and vote on ideas."
+        lbl_feed = "COMMUNITY-\nFEED\n\nSehen Sie, was Ihre Nachbarn vorschlagen." if lang == "DE" else "COMMUNITY\nFEED\n\nSee what neighbors are suggesting."
         if st.button(lbl_feed, type="primary"): navigate_to('feed')
             
         # Box 2
-        lbl_dash = "MEIN DASHBOARD\n\nVerfolgen Sie Ihre Ideen, verwalten Sie Ihr Profil und treffen Sie Nachbarn." if lang == "DE" else "MY DASHBOARD\n\nTrack your ideas, manage your identity, and meet neighbors."
+        lbl_dash = "MEIN\nDASHBOARD\n\nVerwalten Sie Ihre Ideen und Ihr Profil." if lang == "DE" else "MY\nDASHBOARD\n\nManage your ideas and profile."
         if st.button(lbl_dash, type="primary"): navigate_to('dashboard')
             
         # Box 3
-        lbl_admin = "STADTVERWALTUNG\n\n(Nur für Mitarbeiter) Schließen Sie die Feedback-Schleife für Projekte." if lang == "DE" else "CITY ADMIN\n\n(Staff Only) Close the feedback loop on local projects."
+        lbl_admin = "STADT-\nVERWALTUNG\n\n(Nur Personal) Feedback-Schleife schließen." if lang == "DE" else "CITY\nADMIN\n\n(Staff Only) Close the feedback loop."
         if st.button(lbl_admin, type="primary"): navigate_to('admin')
 
     with col2:
         # Box 4
-        lbl_submit = "IDEE EINREICHEN\n\nMelden Sie der Stadt ein Problem oder eine neue Projektidee." if lang == "DE" else "SUBMIT AN IDEA\n\nTell the city about a problem or a new project idea."
+        lbl_submit = "IDEE\nEINREICHEN\n\nMelden Sie ein Problem oder eine Idee." if lang == "DE" else "SUBMIT\nAN IDEA\n\nReport a problem or share an idea."
         if st.button(lbl_submit, type="primary"): navigate_to('submit')
             
         # Box 5
-        lbl_how = "WIE ES FUNKTIONIERT\n\nErfahren Sie, wie unser Algorithmus für Fairness sorgt." if lang == "DE" else "HOW IT WORKS\n\nUnderstand how our algorithm ensures fairness and transparency."
+        lbl_how = "WIE ES\nFUNKTIONIERT\n\nSo sorgt der Algorithmus für Fairness." if lang == "DE" else "HOW IT\nWORKS\n\nHow our algorithm ensures fairness."
         if st.button(lbl_how, type="primary"): navigate_to('how_it_works')
         
         # Box 6
-        lbl_success = "ERFOLGSGESCHICHTEN\n\nLesen Sie, wie Nachbarn bereits positive Veränderungen bewirkt haben." if lang == "DE" else "SUCCESS STORIES\n\nRead how neighbors have already made a positive impact."
+        lbl_success = "ERFOLGS-\nGESCHICHTEN\n\nPositive Veränderungen in der Nachbarschaft." if lang == "DE" else "SUCCESS\nSTORIES\n\nPositive impact in the neighborhood."
         if st.button(lbl_success, type="primary"): navigate_to('success')
 
 
